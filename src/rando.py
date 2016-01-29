@@ -40,7 +40,6 @@ def main():
         print name
         print rbl
 
-        monitor.worker()
 
 if __name__ == '__main__':
     main()
