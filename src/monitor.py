@@ -1,5 +1,7 @@
 import threading
 import time
+import requests
+import json
 
 
 class Monitor(threading.Thread):
@@ -19,13 +21,16 @@ class Monitor(threading.Thread):
 
     def run(self):
         print "Starting thread for " + self.name
-        self.get_monitor_data(self.name, 3)
+        self.get_monitor_data(self.name, 5)
         print "Exiting thread for " + self.name
 
     def get_monitor_data(self, thread_name, delay):
         while True:
             if self.exit_flag:
                 break
+            # call API
+            r = requests.get('http://www.wienerlinien.at/ogd_realtime/monitor?rbl=1346&sender=Fpo1lsUW9i')
+            data = json.dumps(r.text)
+            print data
             time.sleep(delay)
-            print "Calling API " + thread_name
             self.exit_flag = True
