@@ -37,8 +37,11 @@ class Monitor(threading.Thread):
                 now = datetime.datetime.strptime(str(now), "%H:%M:%S.%f").time()
 
                 if not self._time_in_range(self.time_from, self.time_to, now):
+                    diff = self.time_from.hour - self.now.hour
+                    if diff < 0:
+                        diff += 24
                     print "Line out of order. Going to nap for a while."
-                    return
+                    time.sleep(3600*diff)
 
             # call API
             params = {"rbl": self.rbl, "sender": self.testing_key}
