@@ -7,12 +7,13 @@ import datetime
 
 class Monitor(threading.Thread):
 
-    def __init__(self, base_url, testing_key, production_key, name, rbl, time_from, time_to, *args):
+    def __init__(self, queue, base_url, testing_key, production_key, name, rbl, time_from, time_to, *args):
         # init threading
         threading.Thread.__init__(self)
         # exit flag
         self.exit_flag = False
         # init params
+        self.queue = queue
         self.base_url = base_url
         self.testing_key = testing_key
         self.production_key = production_key
@@ -67,7 +68,14 @@ class Monitor(threading.Thread):
                     if line.get("name") is not None and line["name"] == name:
                         departure = line["departures"]["departure"][0]
                         departure_time = departure["departureTime"]["countdown"]
-                        print name + " " + str(departure_time)
+                        # queue information
+                        info = {
+                            "show": {
+                                "name": name,
+                                "time": departure_time
+                            }
+                        }
+                        self.queue.put(info)
                         break
                     else:
                         skips += 1

@@ -2,12 +2,14 @@ import ConfigParser
 from ConfigParser import SafeConfigParser
 from monitor import Monitor
 import datetime
+import Queue
 
 
 def main():
     # init parser
     parser = SafeConfigParser()
     parser.read('../config/api.ini')
+    queue = Queue()
 
     # get API entry
     if parser.has_section('API'):
@@ -43,8 +45,7 @@ def main():
 
         # threading
         if active == "1":
-            thread = Monitor(base_url, testing_key, production_key, name, rbl, time_from, time_to)
-            thread.setDaemon(True)
+            thread = Monitor(queue, base_url, testing_key, production_key, name, rbl, time_from, time_to)
             thread.start()
             threads.append(thread)
 
