@@ -2,6 +2,8 @@ import threading
 import time
 import requests
 import json
+import pprint
+from pydash import py_
 
 
 class Monitor(threading.Thread):
@@ -24,13 +26,26 @@ class Monitor(threading.Thread):
         self.get_monitor_data(self.name, 5)
         print "Exiting thread for " + self.name
 
-    def get_monitor_data(self, thread_name, delay):
+    def get_monitor_data(self, name, delay):
         while True:
             if self.exit_flag:
                 break
+
             # call API
-            r = requests.get('http://www.wienerlinien.at/ogd_realtime/monitor?rbl=1346&sender=Fpo1lsUW9i')
-            data = json.dumps(r.text)
-            print data
-            time.sleep(delay)
-            self.exit_flag = True
+            params = {"rbl": self.rbl, "sender": self.testing_key}
+            res = requests.get(url=self.base_url, params=params)
+            data = json.loads(res.text)
+
+            # pretty print
+            pp = pprint.PrettyPrinter(indent=4)
+            # pp.pprint(data)
+
+            for monitor in data["data"]["monitors"]:
+                for line in monitor["lines"]:
+                    if line["name"] == name:
+                        departure = line["departures"]["departure"][0]
+                        departure_time = departure["departureTime"]["countdown"]
+                        print departure_time
+
+            time.sleep(10)
+            # self.exit_flag = True
