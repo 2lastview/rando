@@ -32,12 +32,12 @@ class Monitor(threading.Thread):
         while True:
             if self.exit_flag:
                 break
-            if skips > 100:
+            if skips > 10:
                 now = datetime.datetime.now().time()
                 now = datetime.datetime.strptime(str(now), "%H:%M:%S.%f").time()
 
                 if not self._time_in_range(self.time_from, self.time_to, now):
-                    diff = self.time_from.hour - self.now.hour
+                    diff = self.time_from.hour - now.hour
                     if diff < 0:
                         diff += 24
                     print "Line out of order. Going to nap for a while."
@@ -76,8 +76,8 @@ class Monitor(threading.Thread):
             time.sleep(delay)
 
     @staticmethod
-    def _time_in_range(start, end, time):
+    def _time_in_range(start, end, t):
         if start <= end:
-            return start <= time <= end
+            return start <= t <= end
         else:
-            return start <= time or time <= end
+            return start <= t or time <= end
