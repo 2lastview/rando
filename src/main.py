@@ -1,6 +1,7 @@
 import ConfigParser
 from ConfigParser import SafeConfigParser
 from monitor import Monitor
+from led import Led
 import datetime
 import Queue
 
@@ -9,7 +10,7 @@ def main():
     # init parser
     parser = SafeConfigParser()
     parser.read('../config/api.ini')
-    queue = Queue()
+    queue = Queue.Queue()
 
     # get API entry
     if parser.has_section('API'):
@@ -48,6 +49,14 @@ def main():
             thread = Monitor(queue, base_url, testing_key, production_key, name, rbl, time_from, time_to)
             thread.start()
             threads.append(thread)
+
+    # led thread
+    thread = Led(queue)
+    thread.start()
+    threads.append(thread)
+
+    # join queue
+    queue.join()
 
     # join threads
     for t in threads:

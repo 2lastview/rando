@@ -22,6 +22,7 @@ class Monitor(threading.Thread):
         self.time_from = time_from
         self.time_to = time_to
         self.args = args
+        self.old_departure_time = -1
 
     def run(self):
         print "Starting thread for " + self.name
@@ -46,7 +47,7 @@ class Monitor(threading.Thread):
                     skips = 0
 
             # call API
-            params = {"rbl": self.rbl, "sender": self.testing_key}
+            params = {"rbl": self.rbl, "sender": self.production_key}
             res = requests.get(url=self.base_url, params=params)
             data = json.loads(res.text)
 
@@ -68,15 +69,18 @@ class Monitor(threading.Thread):
                     if line.get("name") is not None and line["name"] == name:
                         departure = line["departures"]["departure"][0]
                         departure_time = departure["departureTime"]["countdown"]
-                        # queue information
-                        info = {
-                            "show": {
-                                "name": name,
-                                "time": departure_time
+                        # set old departure time
+                        if departure_time != self.old_departure_time:
+                            # queue information
+                            info = {
+                                "show": {
+                                    "name": name,
+                                    "time": departure_time
+                                }
                             }
-                        }
-                        self.queue.put(info)
-                        break
+                            self.queue.put(info)
+                            self.old_departure_time = departure_time
+                            break
                     else:
                         skips += 1
                         continue
