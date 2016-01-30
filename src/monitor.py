@@ -42,6 +42,7 @@ class Monitor(threading.Thread):
                         diff += 24
                     print "Line out of order. Going to nap for a while."
                     time.sleep(3600*diff)
+                    skips = 0
 
             # call API
             params = {"rbl": self.rbl, "sender": self.testing_key}
