@@ -1,6 +1,7 @@
 import ConfigParser
 from ConfigParser import SafeConfigParser
 from monitor import Monitor
+import datetime
 
 
 def main():
@@ -30,15 +31,21 @@ def main():
         try:
             name = parser.get(section_name, "name")
             rbl = parser.get(section_name, "rbl")
+            time_from = parser.get(section_name, "time_from")
+            time_to = parser.get(section_name, "time_to")
+            # time conversion
+            time_from = datetime.datetime.strptime(time_from, "%H:%M:%S.%f").time()
+            time_to = datetime.datetime.strptime(time_to, "%H:%M:%S.%f").time()
         except ConfigParser.NoOptionError as e:
             print "Something missing in " + section_name + " config:" + e.message
             continue
 
         # threading
-        thread = Monitor(base_url, testing_key, production_key, name, rbl)
+        thread = Monitor(base_url, testing_key, production_key, name, rbl, time_from, time_to)
         thread.start()
         threads.append(thread)
 
+    # join threads
     for t in threads:
         t.join()
 

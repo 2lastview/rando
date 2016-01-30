@@ -2,13 +2,12 @@ import threading
 import time
 import requests
 import json
-import pprint
-from pydash import py_
+import datetime
 
 
 class Monitor(threading.Thread):
 
-    def __init__(self, base_url, testing_key, production_key, name, rbl, *args):
+    def __init__(self, base_url, testing_key, production_key, name, rbl, time_from, time_to, *args):
         # init threading
         threading.Thread.__init__(self)
         # exit flag
@@ -19,33 +18,63 @@ class Monitor(threading.Thread):
         self.production_key = production_key
         self.name = name
         self.rbl = rbl
+        self.time_from = time_from
+        self.time_to = time_to
         self.args = args
 
     def run(self):
         print "Starting thread for " + self.name
-        self.get_monitor_data(self.name, 5)
+        self.get_monitor_data(self.name, 10)
         print "Exiting thread for " + self.name
 
     def get_monitor_data(self, name, delay):
+        skips = 0
         while True:
             if self.exit_flag:
                 break
+            if skips > 100:
+                now = datetime.datetime.now().time()
+                now = datetime.datetime.strptime(str(now), "%H:%M:%S.%f").time()
+
+                if not self._time_in_range(self.time_from, self.time_to, now):
+                    print "Line out of order. Going to nap for a while."
+                    return
 
             # call API
             params = {"rbl": self.rbl, "sender": self.testing_key}
             res = requests.get(url=self.base_url, params=params)
             data = json.loads(res.text)
 
-            # pretty print
-            pp = pprint.PrettyPrinter(indent=4)
-            # pp.pprint(data)
+            # validate
+            if data["data"].get("monitors") is None:
+                print "No monitors found in data"
+                continue
 
             for monitor in data["data"]["monitors"]:
+
+                # validate
+                if monitor.get("lines") is None:
+                    print "No lines found in monitor"
+                    break
+
                 for line in monitor["lines"]:
-                    if line["name"] == name:
+
+                    # validate and get departure time
+                    if line.get("name") is not None and line["name"] == name:
                         departure = line["departures"]["departure"][0]
                         departure_time = departure["departureTime"]["countdown"]
-                        print departure_time
+                        print name + " " + str(departure_time)
+                        break
+                    else:
+                        skips += 1
+                        continue
 
-            time.sleep(10)
-            # self.exit_flag = True
+            # sleep 10 seconds until next call
+            time.sleep(delay)
+
+    @staticmethod
+    def _time_in_range(start, end, time):
+        if start <= end:
+            return start <= time <= end
+        else:
+            return start <= time or time <= end
