@@ -24,7 +24,7 @@ class Monitor(threading.Thread):
 
     def run(self):
         print "Starting thread for " + self.name
-        self.get_monitor_data(self.name, 10)
+        self.get_monitor_data(self.name, 5)
         print "Exiting thread for " + self.name
 
     def get_monitor_data(self, name, delay):
