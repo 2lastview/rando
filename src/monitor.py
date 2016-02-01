@@ -25,9 +25,9 @@ class Monitor(threading.Thread):
         self.old_departure_time = -1
 
     def run(self):
-        print "Starting thread for " + self.name
+        print "Starting thread for " + self.name + "\n"
         self.get_monitor_data(self.name, 5)
-        print "Exiting thread for " + self.name
+        print "Exiting thread for " + self.name + "\n"
 
     def get_monitor_data(self, name, delay):
         skips = 0
@@ -42,14 +42,18 @@ class Monitor(threading.Thread):
                     diff = self.time_from.hour - now.hour
                     if diff < 0:
                         diff += 24
-                    print "Line out of order. Going to nap for a while."
+                    print "Line " + name + " out of order. Going to nap for a while."
                     time.sleep(3600*diff)
                     skips = 0
 
             # call API
-            params = {"rbl": self.rbl, "sender": self.production_key}
-            res = requests.get(url=self.base_url, params=params)
-            data = json.loads(res.text)
+            try:
+                params = {"rbl": self.rbl, "sender": self.production_key}
+                res = requests.get(url=self.base_url, params=params)
+                data = json.loads(res.text)
+            except:
+                print "Could not reach server. Sleep for one minute, then retry."
+                time.sleep(60)
 
             # validate
             if data["data"].get("monitors") is None:
@@ -73,7 +77,7 @@ class Monitor(threading.Thread):
                         if departure_time != self.old_departure_time:
                             # queue information
                             info = {
-                                "show": {
+                                "info": {
                                     "name": name,
                                     "time": departure_time
                                 }

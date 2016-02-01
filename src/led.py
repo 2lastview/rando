@@ -10,9 +10,9 @@ class Led(threading.Thread):
         self.queue = queue
 
     def run(self):
-        print "Starting queue thread"
+        print "Starting queue thread\n"
         self.get_led_data()
-        print "Exiting queue thread"
+        print "Exiting queue thread\n"
 
     def get_led_data(self):
         while True:
